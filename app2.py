@@ -27,6 +27,23 @@ if not os.path.exists(MODEL_PATH):
 yolo_model = YOLO(MODEL_PATH)
 ocr = PaddleOCR(lang='en')
 
+# 📌 Fungsi preprocessing plat nomor
+def preprocess_plate(plate_image):
+    # Konversi ke grayscale
+    gray = cv2.cvtColor(plate_image, cv2.COLOR_BGR2GRAY)
+
+    # Binarisasi menggunakan adaptive threshold
+    binary = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+
+    # Noise removal dengan morfologi (opening)
+    kernel = np.ones((3, 3), np.uint8)
+    noise_removed = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel, iterations=1)
+
+    # Dilation untuk memperjelas teks
+    dilated = cv2.dilate(noise_removed, kernel, iterations=1)
+
+    return dilated
+
 # 📌 Fungsi untuk membaca plat nomor dan mengirim ke Firebase
 def detect_plate(image_path):
     # 🔍 Deteksi objek dengan YOLO
@@ -54,9 +71,12 @@ def detect_plate(image_path):
     if plate_image.size == 0:
         return {"error": "Gagal memotong plat nomor"}
 
-    # Simpan gambar hasil crop
-    plate_path = "plate.jpg"
-    cv2.imwrite(plate_path, plate_image)
+    # 🔍 Lakukan preprocessing
+    processed_plate = preprocess_plate(plate_image)
+
+    # Simpan gambar hasil preprocessing
+    plate_path = "plate_processed.jpg"
+    cv2.imwrite(plate_path, processed_plate)
     
     # Jalankan OCR
     ocr_results = ocr.ocr(plate_path, cls=True)
