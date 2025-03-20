@@ -9,3 +9,5 @@ app.py --without timestamp
 app2.py --with timestamp
 
 app3.py --optimized ver
+
+app4.py --with total duration
