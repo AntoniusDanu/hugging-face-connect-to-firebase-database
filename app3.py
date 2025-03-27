@@ -29,6 +29,11 @@ ocr = PaddleOCR(lang='en')
 
 # 📌 Fungsi untuk membaca plat nomor dan mengirim ke Firebase
 def detect_plate(image_path):
+    # 🔍 Preprocessing: Resize image to 640x640
+    image = cv2.imread(image_path)
+    image = cv2.resize(image, (640, 640))
+    cv2.imwrite(image_path, image)  # Overwrite the file with resized image
+    
     # 🔍 Deteksi objek dengan YOLO
     results = yolo_model(image_path)
     
